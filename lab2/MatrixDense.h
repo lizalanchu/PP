@@ -1,7 +1,10 @@
 #ifndef MATRIXDENSE_H
 #define MATRIXDENSE_H
 
-class MatrixDense {
+#include "Matrix.h"
+#include <vector>
+
+class MatrixDense : public Matrix {
     // Код класса
 };
 

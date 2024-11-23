@@ -5,9 +5,13 @@
 #include <vector>
 
 class MatrixDiagonal : public Matrix {
-//код
+private:
+    std::vector<double> data;
+    int size;
+
 public:
-    
+    MatrixDiagonal(int size);
+
     Matrix* add(const Matrix& other) const override;
     Matrix* subtract(const Matrix& other) const override;
     Matrix* elementwiseMultiply(const Matrix& other) const override;

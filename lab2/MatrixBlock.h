@@ -3,10 +3,15 @@
 
 #include "Matrix.h"
 #include <vector>
+#include "MatrixDense.h"
 
 class MatrixBlock  : public Matrix {
-    // Код класса
+private:
+    std::vector<MatrixDense> blocks;
+    int blockRows, blockCols;
+
 public:
+    MatrixBlock(int blockRows, int blockCols, int subRows, int subCols);
 
     Matrix* add(const Matrix& other) const override;
     Matrix* subtract(const Matrix& other) const override;

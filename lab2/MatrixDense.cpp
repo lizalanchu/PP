@@ -77,9 +77,27 @@ Matrix* MatrixDense::multiply(const Matrix& other) const {
     // Преобразуем указатель на другую матрицу в указатель на MatrixDense.
     const MatrixDense* otherDense = dynamic_cast<const MatrixDense*>(&other);
     // Проверяем, что количество столбцов первой матрицы совпадает с количеством строк второй.
-    if (!otherDense || rows != otherDense->rows || cols != otherDense->cols) {
+    if (!otherDense || cols != otherDense->rows) {
         throw std::invalid_argument("Размеры матрицы не совпадают.");
     }
+
+    // Создаем новую матрицу для результата.
+    MatrixDense* result = new MatrixDense(rows, otherDense->cols);
+    
+    // Стандартное умножение матриц (поэлементное суммирование произведений).
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < otherDense->cols; ++j) {
+            double sum = 0.0;
+            // Внутренний цикл для произведений элементов.
+            for (int k = 0; k < cols; ++k) {
+                sum += data[i][k] * otherDense->data[k][j];
+            }
+            result->data[i][j] = sum;
+        }
+    }
+
+    // Возвращаем указатель на новую матрицу.
+    return result;
 }
 
 

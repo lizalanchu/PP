@@ -82,6 +82,20 @@ Matrix* MatrixDense::multiply(const Matrix& other) const {
     }
 }
 
+
+
 Matrix* MatrixDense::transpose() const {
+    // Создаем новую матрицу с перевернутыми размерами.
+    MatrixDense* result = new MatrixDense(cols, rows);
+    
+    // Транспонирование: меняем местами индексы строк и столбцов.
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            result->data[j][i] = data[i][j];
+        }
+    }
+
+    // Возвращаем указатель на транспонированную матрицу.
+    return result;
     
 }

@@ -1,5 +1,8 @@
 #include "MatrixDense.h"
 #include <stdexcept> // Подключение библиотеки для обработки исключений
+#include <fstream> // Файловый ввод-вывод
+#include <iostream>// Консоль ввод-вывод
+
 
 
 MatrixDense::MatrixDense(int rows, int cols) : rows(rows), cols(cols), data(rows, std::vector<double>(cols)) {}
@@ -117,3 +120,32 @@ Matrix* MatrixDense::transpose() const {
     return result;
     
 }
+
+
+
+void MatrixDense::importFromFile(const std::string& filename) {
+    std::ifstream file(filename); // Открываем файл для чтения.
+    if (!file.is_open()) throw std::runtime_error("Не удается открыть файл."); 
+    // Если файл не открылся, выбрасываем исключение.
+
+    std::string className; 
+    file >> className; // Читаем первую строку файла, где указано имя класса.
+    if (className != "MatrixDense") throw std::runtime_error("Недопустимый тип матрицы.");
+    // Если имя класса не соответствует "MatrixDense", выбрасываем исключение.
+
+    file >> rows >> cols; // Считываем размеры матрицы (строки и столбцы).
+    data.resize(rows, std::vector<double>(cols)); 
+    // Устанавливаем размеры  `data`.
+
+    for (int i = 0; i < rows; ++i) { // Внешний цикл по строкам.
+        for (int j = 0; j < cols; ++j) { // Вложенный цикл по столбцам.
+            if (!(file >> data[i][j])) { 
+                // Пытаемся считать элемент из файла. Если не удается, выбрасываем исключение.
+                throw std::runtime_error("Ошибка при считывании данных матрицы.");
+            }
+        }
+    }
+
+    file.close(); // Закрываем файл.
+}
+

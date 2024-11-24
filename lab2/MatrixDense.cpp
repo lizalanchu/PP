@@ -172,3 +172,13 @@ void MatrixDense::exportToFile(const std::string& filename) const {
 }
 
 
+
+void MatrixDense::print() const {
+    for (const auto& row : data) { // Проходим по каждой строке матрицы.
+        for (double value : row) { // Проходим по каждому элементу строки.
+            std::cout << value << " "; 
+            // Выводим элемент строки на экран с пробелом между ними.
+        }
+        std::cout << "\n"; // После вывода всех элементов строки переходим на новую строку.
+    }
+}

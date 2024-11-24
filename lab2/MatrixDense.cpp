@@ -149,3 +149,26 @@ void MatrixDense::importFromFile(const std::string& filename) {
     file.close(); // Закрываем файл.
 }
 
+
+
+void MatrixDense::exportToFile(const std::string& filename) const {
+    std::ofstream file(filename); // Открываем файл для записи.
+    if (!file.is_open()) throw std::runtime_error("Не удается открыть файл.."); 
+    // Если файл не открылся, выбрасываем исключение.
+
+    file << "MatrixDense\n"; // Записываем имя класса "MatrixDense".
+    file << rows << " " << cols << "\n"; 
+    // Записываем размеры матрицы (строки и столбцы).
+
+    for (const auto& row : data) { // Проходим по каждой строке матрицы.
+        for (double value : row) { // Проходим по каждому элементу строки.
+            file << value << " "; 
+            // Записываем элемент строки в файл, разделяя пробелами.
+        }
+        file << "\n"; // Переходим на новую строку после записи одной строки матрицы.
+    }
+
+    file.close(); // Закрываем файл.
+}
+
+

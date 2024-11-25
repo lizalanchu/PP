@@ -7,8 +7,13 @@
 
 class MatrixBlock  : public Matrix {
 private:
-    std::vector<MatrixDense> blocks;
-    int blockRows, blockCols;
+    int blockRows; // Размер строк в блоке
+    int blockCols; // Размер столбцов в блоке
+    int subRows;   // Количество блоков по строкам
+    int subCols;   // Количество блоков по столбцам
+
+    // Вектор блоков матрицы (каждый блок — это двумерный вектор)
+    std::vector<std::vector<std::vector<double>>> blocks;
 
 public:
     MatrixBlock(int blockRows, int blockCols, int subRows, int subCols);

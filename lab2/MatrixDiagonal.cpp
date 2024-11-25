@@ -96,3 +96,59 @@ Matrix* MatrixDiagonal::transpose() const {
    
     
 }
+
+
+
+// Импорт матрицы из файла
+void MatrixDense::importFromFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) throw std::runtime_error("Unable to open file.");
+
+    std::string className;
+    file >> className;
+    if (className != "MatrixDense") throw std::runtime_error("Недопустимый тип матрицы.");
+
+    file >> rows >> cols;
+    data.resize(rows, std::vector<double>(cols));
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (!(file >> data[i][j])) {
+                throw std::runtime_error("Ошибка при считывании матричных данных.");
+            }
+        }
+    }
+
+    file.close();
+}
+
+
+
+// Экспорт матрицы в файл
+void MatrixDense::exportToFile(const std::string& filename) const {
+    std::ofstream file(filename);
+    if (!file.is_open()) throw std::runtime_error("Не удается открыть файл.");
+
+    file << "MatrixDense\n";
+    file << rows << " " << cols << "\n";
+    for (const auto& row : data) {
+        for (double value : row) {
+            file << value << " ";
+        }
+        file << "\n";
+    }
+
+    file.close();
+}
+
+
+
+//вывод матрицы на экран
+void MatrixDense::print() const {
+    for (const auto& row : data) {
+        for (double value : row) {
+            std::cout << value << " ";
+        }
+        std::cout << "\n";
+    }
+}

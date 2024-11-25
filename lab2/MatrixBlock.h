@@ -3,7 +3,7 @@
 
 #include "Matrix.h"
 #include <vector>
-#include "MatrixDense.h"
+#include <string>
 
 class MatrixBlock  : public Matrix {
 private:

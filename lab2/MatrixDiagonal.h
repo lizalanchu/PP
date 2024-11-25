@@ -20,6 +20,7 @@ public:
 
     void importFromFile(const std::string& filename) override;
     void exportToFile(const std::string& filename) const override;
+    void print() const override;
 };
 
 #endif // MATRIXDIAGONAL_H

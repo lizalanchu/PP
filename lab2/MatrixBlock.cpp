@@ -64,8 +64,26 @@ Matrix* MatrixBlock::subtract(const Matrix& other) const {
 
 
 Matrix* MatrixBlock::elementwiseMultiply(const Matrix& other) const {
-    // Реализация поэлементного умножения 
+    const MatrixBlock* otherBlock = dynamic_cast<const MatrixBlock*>(&other); // Приведение параметра other к типу MatrixBlock
+    if (!otherBlock || subRows != otherBlock->subRows || subCols != otherBlock->subCols) {
+        throw std::invalid_argument("Matrix dimensions do not match for element-wise multiplication.");
+    }
+
+    // Создаем новую матрицу для результата
+    MatrixBlock* result = new MatrixBlock(blockRows, blockCols, subRows, subCols); 
+
+    // Проходим по каждому блоку и выполняем поэлементное умножение
+    for (int b = 0; b < subRows * subCols; ++b) {
+        for (int i = 0; i < blockRows; ++i) {
+            for (int j = 0; j < blockCols; ++j) {
+                result->blocks[b][i][j] = blocks[b][i][j] * otherBlock->blocks[b][i][j]; // Умножаем соответствующие элементы
+            }
+        }
+    }
+    return result; // Возвращаем результат 
 }
+
+
 
 Matrix* MatrixBlock::multiply(const Matrix& other) const {
     // Реализация матричного умножения 

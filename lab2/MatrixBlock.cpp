@@ -42,8 +42,26 @@ Matrix* MatrixBlock::add(const Matrix& other) const {
 
 
 Matrix* MatrixBlock::subtract(const Matrix& other) const {
-    // Реализация вычитания 
+    const MatrixBlock* otherBlock = dynamic_cast<const MatrixBlock*>(&other); // Приведение параметра other к типу MatrixBlock
+    if (!otherBlock || subRows != otherBlock->subRows || subCols != otherBlock->subCols) {
+        throw std::invalid_argument("Размеры матрицы не совпадают для вычитания.");
+    }
+
+    MatrixBlock* result = new MatrixBlock(blockRows, blockCols, subRows, subCols); // Создаем новую матрицу для результата
+
+    // Проходим по каждому блоку матрицы и вычитаем элементы
+    for (int b = 0; b < subRows * subCols; ++b) {
+        for (int i = 0; i < blockRows; ++i) {
+            for (int j = 0; j < blockCols; ++j) {
+                result->blocks[b][i][j] = blocks[b][i][j] - otherBlock->blocks[b][i][j];
+            }
+        }
+    }
+    return result; // Возвращаем указатель на результирующую матрицу
 }
+
+
+
 
 Matrix* MatrixBlock::elementwiseMultiply(const Matrix& other) const {
     // Реализация поэлементного умножения 

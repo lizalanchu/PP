@@ -100,22 +100,20 @@ Matrix* MatrixDiagonal::transpose() const {
 
 
 // Импорт матрицы из файла
-void MatrixDense::importFromFile(const std::string& filename) {
+void MatrixDiagonal::importFromFile(const std::string& filename) {
     std::ifstream file(filename);
-    if (!file.is_open()) throw std::runtime_error("Unable to open file.");
+    if (!file.is_open()) throw std::runtime_error("Не удается открыть файл.");
 
     std::string className;
     file >> className;
-    if (className != "MatrixDense") throw std::runtime_error("Недопустимый тип матрицы.");
+    if (className != "MatrixDiagonal") throw std::runtime_error("Недопустимый тип матрицы.");
 
-    file >> rows >> cols;
-    data.resize(rows, std::vector<double>(cols));
+    file >> size;
+    data.resize(size);
 
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (!(file >> data[i][j])) {
+    for (int i = 0; i < size; ++i) {
+        if (!(file >> data[i])) {
                 throw std::runtime_error("Ошибка при считывании матричных данных.");
-            }
         }
     }
 
@@ -125,18 +123,16 @@ void MatrixDense::importFromFile(const std::string& filename) {
 
 
 // Экспорт матрицы в файл
-void MatrixDense::exportToFile(const std::string& filename) const {
+void MatrixDiagonal::exportToFile(const std::string& filename) const {
     std::ofstream file(filename);
     if (!file.is_open()) throw std::runtime_error("Не удается открыть файл.");
 
-    file << "MatrixDense\n";
-    file << rows << " " << cols << "\n";
-    for (const auto& row : data) {
-        for (double value : row) {
-            file << value << " ";
-        }
-        file << "\n";
+    file << "MatrixDiagonal\n";
+    file << size << "\n";
+    for (double value : data) {
+        file << value << " ";
     }
+    file << "\n";
 
     file.close();
 }
@@ -144,10 +140,14 @@ void MatrixDense::exportToFile(const std::string& filename) const {
 
 
 //вывод матрицы на экран
-void MatrixDense::print() const {
-    for (const auto& row : data) {
-        for (double value : row) {
-            std::cout << value << " ";
+void MatrixDiagonal::print() const {
+    for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+            if (i == j) {
+                std::cout << data[i] << " ";
+            } else {
+                std::cout << "0 ";
+            }
         }
         std::cout << "\n";
     }

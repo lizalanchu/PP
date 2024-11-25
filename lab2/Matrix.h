@@ -16,6 +16,7 @@ public:
 
     virtual void importFromFile(const std::string& filename) = 0; //функция для считывания данных матрицы из файла
     virtual void exportToFile(const std::string& filename) const = 0;//функция для записи матрицы в файл
+    virtual void print() const = 0;//вывод на экран
 };
 
 #endif // MATRIX_H

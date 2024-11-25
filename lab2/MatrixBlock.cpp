@@ -127,6 +127,16 @@ Matrix* MatrixBlock::multiply(const Matrix& other) const {
     return result; // Возвращаем указатель на новую матрицу
 }
 
+
+
 Matrix* MatrixBlock::transpose() const {
-    // Транспонирование
+    MatrixBlock* result = new MatrixBlock(blockCols, blockRows, subCols, subRows); // Новый объект для транспонированной матрицы
+
+    // Проходим по блокам и меняем их местами
+    for (int b1 = 0; b1 < subRows; ++b1) {
+        for (int b2 = 0; b2 < subCols; ++b2) {
+            result->blocks[b2][b1] = blocks[b1][b2]; // Меняем местами блоки
+        }
+    }
+    return result; // Возвращаем транспонированную матрицу
 }

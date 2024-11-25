@@ -140,3 +140,72 @@ Matrix* MatrixBlock::transpose() const {
     }
     return result; // Возвращаем транспонированную матрицу
 }
+
+
+
+// Импорт матрицы из файла
+void MatrixBlock::importFromFile(const std::string& filename) {
+    std::ifstream file(filename); // Открываем файл
+    if (!file.is_open()) { // Проверка, открытие файла прошло успешно
+        throw std::runtime_error("Unable to open file.");
+    }
+
+    std::string className;
+    file >> className; // Читаем имя класса
+    if (className != "MatrixBlock") { // Проверяем, совпадает ли имя класса с ожидаемым
+        throw std::runtime_error("Invalid matrix type.");
+    }
+
+    file >> blockRows >> blockCols >> subRows >> subCols; // Читаем размеры блоков и матрицы
+    blocks.resize(subRows * subCols, std::vector<std::vector<double>>(blockRows, std::vector<double>(blockCols))); // Изменяем размер массива
+
+    // Читаем элементы каждого блока
+    for (int b = 0; b < subRows * subCols; ++b) {
+        for (int i = 0; i < blockRows; ++i) {
+            for (int j = 0; j < blockCols; ++j) {
+                if (!(file >> blocks[b][i][j])) { // Если возникла ошибка при чтении
+                    throw std::runtime_error("Error reading block data.");
+                }
+            }
+        }
+    }
+
+    file.close(); // Закрываем файл
+}
+
+// Экспорт матрицы в файл
+void MatrixBlock::exportToFile(const std::string& filename) const {
+    std::ofstream file(filename); // Открываем файл для записи
+    if (!file.is_open()) { // Проверка успешного открытия файла
+        throw std::runtime_error("Unable to open file.");
+    }
+
+    file << "MatrixBlock\n"; // Пишем тип матрицы
+    file << blockRows << " " << blockCols << " " << subRows << " " << subCols << "\n"; // Пишем размеры
+
+    // Записываем элементы каждого блока
+    for (const auto& block : blocks) {
+        for (const auto& row : block) {
+            for (double value : row) {
+                file << value << " "; // Пишем значения
+            }
+            file << "\n"; // Новая строка
+        }
+        file << "\n"; // Разделяем блоки пустой строкой
+    }
+
+    file.close(); // Закрываем файл
+}
+
+// Для отладки: вывод матрицы на консоль
+void MatrixBlock::print() const {
+    for (const auto& block : blocks) {
+        for (const auto& row : block) {
+            for (double value : row) {
+                std::cout << value << " "; // Печать значений в строке
+            }
+            std::cout << "\n"; // Переход на новую строку
+        }
+        std::cout << "\n"; // Разделяем блоки пустой строкой
+    }
+}

@@ -66,7 +66,7 @@ Matrix* MatrixBlock::subtract(const Matrix& other) const {
 Matrix* MatrixBlock::elementwiseMultiply(const Matrix& other) const {
     const MatrixBlock* otherBlock = dynamic_cast<const MatrixBlock*>(&other); // Приведение параметра other к типу MatrixBlock
     if (!otherBlock || subRows != otherBlock->subRows || subCols != otherBlock->subCols) {
-        throw std::invalid_argument("Matrix dimensions do not match for element-wise multiplication.");
+        throw std::invalid_argument("Размеры матрицы не совпадают при поэлементном умножении.");
     }
 
     // Создаем новую матрицу для результата
@@ -86,7 +86,45 @@ Matrix* MatrixBlock::elementwiseMultiply(const Matrix& other) const {
 
 
 Matrix* MatrixBlock::multiply(const Matrix& other) const {
-    // Реализация матричного умножения 
+    const MatrixBlock* otherBlock = dynamic_cast<const MatrixBlock*>(&other);
+
+    // Проверка совместимости типов
+    if (!otherBlock) {
+        throw std::invalid_argument("Несоответствие типа матрицы: ожидаемый MatrixBlock.");
+    }
+
+    // Проверка совместимости размеров блоков
+    if (blockCols != otherBlock->blockRows) {
+        throw std::invalid_argument("Размеры блоков не совпадают для умножения.");
+    }
+
+    // Проверка совместимости структур матриц
+    if (subCols != otherBlock->subRows) {
+        throw std::invalid_argument("Блочная структура матрицы не подходит для умножения.");
+    }
+
+    // Создание результирующей матрицы
+    MatrixBlock* result = new MatrixBlock(blockRows, otherBlock->blockCols, subRows, otherBlock->subCols);
+
+    // Умножение блоков
+    for (int i = 0; i < subRows; ++i) {                // Блоки строк первой матрицы
+        for (int j = 0; j < otherBlock->subCols; ++j) { // Блоки столбцов второй матрицы
+            for (int k = 0; k < subCols; ++k) {        // Общие блоки (столбцы первой = строки второй)
+                // Умножение блоков (i, k) * (k, j)
+                for (int bi = 0; bi < blockRows; ++bi) { // Внутренние строки блока
+                    for (int bj = 0; bj < otherBlock->blockCols; ++bj) { // Внутренние столбцы блока
+                        for (int bk = 0; bk < blockCols; ++bk) { // Внутренние элементы блока
+                            result->blocks[i * result->subCols + j][bi][bj] += 
+                                blocks[i * subCols + k][bi][bk] * 
+                                otherBlock->blocks[k * otherBlock->subCols + j][bk][bj];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return result; // Возвращаем указатель на новую матрицу
 }
 
 Matrix* MatrixBlock::transpose() const {

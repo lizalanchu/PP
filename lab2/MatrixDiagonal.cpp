@@ -91,5 +91,8 @@ Matrix* MatrixDiagonal::multiply(const Matrix& other) const {
 
 
 Matrix* MatrixDiagonal::transpose() const {
-     // Транспонирование 
+      // Создаётся копия текущей матрицы, так как транспонированная версия диагональной матрицы совпадает с оригиналом
+    return new MatrixDiagonal(*this);
+   
+    
 }

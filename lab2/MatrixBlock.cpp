@@ -133,15 +133,34 @@ Matrix* MatrixBlock::transpose() const {
     MatrixBlock* result = new MatrixBlock(blockCols, blockRows, subCols, subRows); // Новый объект для транспонированной матрицы
 
     // Проходим по блокам и меняем их местами
-    for (int b1 = 0; b1 < subRows; ++b1) {
-        for (int b2 = 0; b2 < subCols; ++b2) {
-            result->blocks[b2][b1] = blocks[b1][b2]; // Меняем местами блоки
+    for (int i = 0; i < subRows; ++i) {
+        for (int j = 0; j < subCols; ++j) {
+            // Перемещаем блоки
+            int newRow = j;
+            int newCol = i;
+
+            // Перебираем все элементы внутри блока
+            for (int k = 0; k < blockRows; ++k) {
+                for (int l = 0; l < blockCols; ++l) {
+                    // Перемещаем элементы внутри блока
+                    result->blocks[newRow * subCols + newCol][l][k] = blocks[i * subCols + j][k][l];
+                }
+            }
         }
     }
     return result; // Возвращаем транспонированную матрицу
 }
 
 
+
+void MatrixBlock::set(int blockRow, int blockCol, int subRow, int subCol, double value) {
+    if (blockRow >= blockRows || blockCol >= blockCols || subRow >= subRows || subCol >= subCols || blockRow < 0 || blockCol < 0 || subRow < 0 || subCol < 0) {
+        throw std::out_of_range("Matrix block index out of range");
+    }
+    blocks[blockRow * blockRows + blockCol][subRow][subCol] = value;
+}
+
+        
 
 // Импорт матрицы из файла
 void MatrixBlock::importFromFile(const std::string& filename) {

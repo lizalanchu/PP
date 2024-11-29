@@ -99,6 +99,17 @@ Matrix* MatrixDiagonal::transpose() const {
 
 
 
+void MatrixDiagonal::set(int row, int col, double value){
+        // Проверка, что мы находимся на главной диагонали
+        if (row == col) {
+            data[row] = value;  // Устанавливаем значение только на главной диагонали
+        } else {
+            throw std::invalid_argument("Недиагональные элементы не должны быть установлены.");
+        }
+    }
+
+
+
 // Импорт матрицы из файла
 void MatrixDiagonal::importFromFile(const std::string& filename) {
     std::ifstream file(filename);

@@ -123,6 +123,15 @@ Matrix* MatrixDense::transpose() const {
 
 
 
+void MatrixDense::set(int row, int col, double value){
+    if (row < 0 || row >= rows || col < 0 || col >= cols) {
+        throw std::out_of_range("Index out of range");
+    }
+    data[row][col] = value;
+}
+
+
+
 void MatrixDense::importFromFile(const std::string& filename) {
     std::ifstream file(filename); // Открываем файл для чтения.
     if (!file.is_open()) throw std::runtime_error("Не удается открыть файл."); 

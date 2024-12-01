@@ -77,5 +77,26 @@ public:
     bool isInitialized() const {
         return is_initialized;
     }
+
+// Экспорт в файл
+    void export_to_file(const std::string& filename) {
+        check_initialized();
+        std::ofstream file(filename);
+        file << n << std::endl;
+        for (size_t i = 0; i < n; ++i) {
+            file << data[i] << std::endl;
+        }
+    }
+
+    // Импорт из файла
+    void import_from_file(const std::string& filename) {
+        std::ifstream file(filename);
+        file >> n;
+        data = new T[n];
+        for (size_t i = 0; i < n; ++i) {
+            file >> data[i];
+        }
+        is_initialized = true;
+    }
 };
 

@@ -1,6 +1,15 @@
 #include <iostream>
 #include <stdexcept>
 #include <random> // Для генерации случайных чисел
+#include <vector> 
+#include <fstream>   // Для работы с файлами
+#include <chrono>    // Для замера времени выполнения
+#include <thread>    // Для работы с потоками (std::thread)
+#include <mutex>     // Для синхронизации потоков с помощью мьютекса
+#include <omp.h>     // Для использования OpenMP
+#include <tuple>
+
+std::mutex mtx;
 
 template <typename T>
 class Vector {
@@ -101,9 +110,13 @@ public:
 
 
 // Функция для поиска минимального элемента и его индекса
-    std::pair<T, size_t> find_min() {
-        check_initialized(); // Проверка, инициализирован ли вектор
+    std::tuple<T, size_t, double> findMinSequential() {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
 
+        auto start = std::chrono::high_resolution_clock::now();
+        
         T min_value = data[0]; // Инициализация минимального значения первым элементом
         size_t min_index = 0; // Индекс минимального элемента
         for (size_t i = 1; i < n; ++i) {
@@ -112,8 +125,96 @@ public:
                 min_index = i; // Обновляем индекс минимального элемента
             }
         }
-        return {min_value, min_index}; // Возвращаем пару (значение, индекс)
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+        return {min_value, min_index, duration.count()}; // Возвращаем пару (значение, индекс)
     }
+
+
+// Параллельный поиск минимального элемента с использованием std::thread
+    std::tuple<T, size_t, double> findMinParallelThreads(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
+        T min_value = data[0];
+        size_t min_index = 0;
+
+        std::vector<std::thread> threads;
+        std::vector<T> min_values(num_threads, std::numeric_limits<T>::max());
+        std::vector<size_t> min_indexes(num_threads, 0);
+
+        // Функция для поиска минимального элемента в каждой части вектора
+        auto findMinInRange = [&](size_t thread_id, size_t start, size_t end) {
+            T local_min_value = data[start];
+            size_t local_min_index = start;
+
+            for (size_t i = start + 1; i < end; ++i) {
+                if (data[i] < local_min_value) {
+                    local_min_value = data[i];
+                    local_min_index = i;
+                }
+            }
+
+            min_values[thread_id] = local_min_value;
+            min_indexes[thread_id] = local_min_index;
+        };
+
+        // Разбиение работы между потоками
+        size_t chunk_size = n / num_threads;
+        for (size_t i = 0; i < num_threads; ++i) {
+            size_t start = i * chunk_size;
+            size_t end = (i == num_threads - 1) ? n : (i + 1) * chunk_size;
+            threads.push_back(std::thread(findMinInRange, i, start, end));
+        }
+
+        // Ожидание завершения всех потоков
+        for (auto& th : threads) {
+            th.join();
+        }
+
+        // Обработка результатов
+        for (size_t i = 0; i < num_threads; ++i) {
+            if (min_values[i] < min_value) {
+                min_value = min_values[i];
+                min_index = min_indexes[i];
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {min_value, min_index, duration.count()};
+    }
+
+
+// Метод для поиска минимального элемента (параллельный с OpenMP)
+    std::tuple<T, size_t, double> findMinParallelOpenMP(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
+
+        T min_value = data[0];
+        size_t min_index = 0;
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений
+        #pragma omp parallel for num_threads(num_threads) reduction(min:min_value)
+        for (size_t i = 0; i < n; ++i) {
+            if (data[i] < min_value) {
+                min_value = data[i];
+                min_index = i;
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {min_value, min_index, duration.count()};
+    }
+
 
     // Функция для поиска максимального элемента и его индекса
     std::pair<T, size_t> find_max() {

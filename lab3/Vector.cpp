@@ -570,5 +570,87 @@ public:
 
 
 
+// Метод для нахождения Манхэттенской нормы (последовательная версия)
+    std::pair<T, double> findManhattanNormSequential() {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum_of_absolute_values = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (size_t i = 0; i < n; ++i) {
+            sum_of_absolute_values += std::abs(data[i]);
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum_of_absolute_values, duration.count()};
+    }
+
+    // Метод для нахождения Манхэттенской нормы (параллельная версия через std::thread)
+    std::pair<T, double> findManhattanNormParallelThreads(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum_of_absolute_values = 0;
+        std::vector<std::thread> threads;
+        size_t chunk_size = n / num_threads;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Разделение на части и запуск потоков
+        for (size_t i = 0; i < num_threads; ++i) {
+            threads.push_back(std::thread([this, &sum_of_absolute_values, i, chunk_size, num_threads]() {
+                T local_sum = 0;
+                size_t start_idx = i * chunk_size;
+                size_t end_idx = (i == num_threads - 1) ? n : start_idx + chunk_size;
+
+                for (size_t j = start_idx; j < end_idx; ++j) {
+                    local_sum += std::abs(data[j]);
+                }
+
+                std::lock_guard<std::mutex> lock(mtx);
+                sum_of_absolute_values += local_sum;  // Обновление общей суммы
+            }));
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum_of_absolute_values, duration.count()};
+    }
+
+    // Метод для нахождения Манхэттенской нормы (параллельная версия через OpenMP)
+    std::pair<T, double> findManhattanNormParallelOpenMP(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum_of_absolute_values = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений с использованием OpenMP
+        #pragma omp parallel for num_threads(num_threads) reduction(+:sum_of_absolute_values)
+        for (size_t i = 0; i < n; ++i) {
+            sum_of_absolute_values += std::abs(data[i]);
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum_of_absolute_values, duration.count()};
+    }
+
+
+
+
+
+
 };
 

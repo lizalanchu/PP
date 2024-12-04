@@ -648,6 +648,91 @@ public:
     }
 
 
+// Метод для нахождения скалярного произведения двух векторов (последовательная версия)
+    std::pair<T, double> dotProductSequential(const Vector<T>& other) {
+        if (!is_initialized || !other.is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+        if (n != other.n) {
+            throw std::logic_error("Vectors must have the same size!");
+        }
+
+        T result = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (size_t i = 0; i < n; ++i) {
+            result += data[i] * other.data[i];
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {result, duration.count()};
+    }
+
+    // Метод для нахождения скалярного произведения двух векторов (параллельная версия через std::thread)
+    std::pair<T, double> dotProductParallelThreads(const Vector<T>& other, size_t num_threads) {
+        if (!is_initialized || !other.is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+        if (n != other.n) {
+            throw std::logic_error("Vectors must have the same size!");
+        }
+
+        T result = 0;
+        std::vector<std::thread> threads;
+        size_t chunk_size = n / num_threads;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Разделение на части и запуск потоков
+        for (size_t i = 0; i < num_threads; ++i) {
+            threads.push_back(std::thread([this, &other, &result, i, chunk_size, num_threads]() {
+                T local_sum = 0;
+                size_t start_idx = i * chunk_size;
+                size_t end_idx = (i == num_threads - 1) ? n : start_idx + chunk_size;
+
+                for (size_t j = start_idx; j < end_idx; ++j) {
+                    local_sum += data[j] * other.data[j];
+                }
+
+                std::lock_guard<std::mutex> lock(mtx);
+                result += local_sum;  // Обновление общей суммы
+            }));
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {result, duration.count()};
+    }
+
+    // Метод для нахождения скалярного произведения двух векторов (параллельная версия через OpenMP)
+    std::pair<T, double> dotProductParallelOpenMP(const Vector<T>& other, size_t num_threads) {
+        if (!is_initialized || !other.is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+        if (n != other.n) {
+            throw std::logic_error("Vectors must have the same size!");
+        }
+
+        T result = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений с использованием OpenMP
+        #pragma omp parallel for num_threads(num_threads) reduction(+:result)
+        for (size_t i = 0; i < n; ++i) {
+            result += data[i] * other.data[i];
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {result, duration.count()};
+    }
 
 
 

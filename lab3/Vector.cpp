@@ -217,8 +217,12 @@ public:
 
 
     // Функция для поиска максимального элемента и его индекса
-    std::pair<T, size_t> find_max() {
-        check_initialized(); // Проверка, инициализирован ли вектор
+    std::tuple<T, size_t, double> findMaxSequential() {
+         if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
 
         T max_value = data[0]; // Инициализация максимального значения первым элементом
         size_t max_index = 0; // Индекс максимального элемента
@@ -228,7 +232,94 @@ public:
                 max_index = i; // Обновляем индекс максимального элемента
             }
         }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
         return {max_value, max_index}; // Возвращаем пару (значение, индекс)
+    }
+
+
+// Параллельный поиск максимального элемента с использованием std::thread
+    std::tuple<T, size_t, double> findMaxParallelThreads(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
+        T max_value = data[0];
+        size_t max_index = 0;
+
+        std::vector<std::thread> threads;
+        std::vector<T> max_values(num_threads, std::numeric_limits<T>::min());
+        std::vector<size_t> max_indexes(num_threads, 0);
+
+        // Функция для поиска максимального элемента в каждой части вектора
+        auto findMaxInRange = [&](size_t thread_id, size_t start, size_t end) {
+            T local_max_value = data[start];
+            size_t local_max_index = start;
+
+            for (size_t i = start + 1; i < end; ++i) {
+                if (data[i] > local_max_value) {
+                    local_max_value = data[i];
+                    local_max_index = i;
+                }
+            }
+
+            max_values[thread_id] = local_max_value;
+            max_indexes[thread_id] = local_max_index;
+        };
+
+        // Разбиение работы между потоками
+        size_t chunk_size = n / num_threads;
+        for (size_t i = 0; i < num_threads; ++i) {
+            size_t start = i * chunk_size;
+            size_t end = (i == num_threads - 1) ? n : (i + 1) * chunk_size;
+            threads.push_back(std::thread(findMaxInRange, i, start, end));
+        }
+
+        // Ожидание завершения всех потоков
+        for (auto& th : threads) {
+            th.join();
+        }
+
+        // Обработка результатов
+        for (size_t i = 0; i < num_threads; ++i) {
+            if (max_values[i] > max_value) {
+                max_value = max_values[i];
+                max_index = max_indexes[i];
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {max_value, max_index, duration.count()};
+    }
+
+
+// Метод для поиска максимального элемента (параллельный с OpenMP)
+    std::pair<T, size_t> findMaxParallelOpenMP(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T max_value = data[0];
+        size_t max_index = 0;
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений
+        #pragma omp parallel for num_threads(num_threads) reduction(max:max_value)
+        for (size_t i = 0; i < n; ++i) {
+            if (data[i] > max_value) {
+                max_value = data[i];
+                max_index = i;
+            }
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {max_value, max_index, duration.count()};
     }
 };
 

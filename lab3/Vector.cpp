@@ -219,7 +219,7 @@ public:
     // Функция для поиска максимального элемента и его индекса
     std::tuple<T, size_t, double> findMaxSequential() {
          if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -241,7 +241,7 @@ public:
 // Параллельный поиск максимального элемента с использованием std::thread
     std::tuple<T, size_t, double> findMaxParallelThreads(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -299,7 +299,7 @@ public:
 // Метод для поиска максимального элемента (параллельный с OpenMP)
     std::pair<T, size_t> findMaxParallelOpenMP(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T max_value = data[0];
@@ -326,7 +326,7 @@ public:
 // Метод для нахождения среднего значения (последовательная версия)
     std::pair<T, double> findAverageSequential() {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -347,7 +347,7 @@ public:
     // Метод для нахождения среднего значения (параллельная версия через std::thread)
     std::pair<T, double> findAverageParallelThreads(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -386,7 +386,7 @@ public:
     // Метод для нахождения среднего значения (параллельная версия через OpenMP)
     std::pair<T, double> findAverageParallelOpenMP(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -410,7 +410,7 @@ public:
 // Метод для нахождения суммы элементов (последовательная версия)
     std::pair<T, double> findSumSequential() {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -429,7 +429,7 @@ public:
     // Метод для нахождения суммы элементов (параллельная версия через std::thread)
     std::pair<T, double> findSumParallelThreads(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -466,7 +466,7 @@ public:
     // Метод для нахождения суммы элементов (параллельная версия через OpenMP)
     std::pair<T, double> findSumParallelOpenMP(size_t num_threads) {
         if (!is_initialized) {
-            throw std::logic_error("Vector is not initialized!");
+            throw std::logic_error("Вектор не инициализирован!");
         }
 
         T sum = 0;
@@ -483,6 +483,91 @@ public:
 
         return {sum, duration.count()};
     }
+
+
+
+    // Метод для нахождения Евклидовой нормы (последовательная версия)
+    std::pair<T, double> findEuclideanNormSequential() {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
+
+        T sum_of_squares = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (size_t i = 0; i < n; ++i) {
+            sum_of_squares += data[i] * data[i];
+        }
+
+        T norm = std::sqrt(sum_of_squares);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {norm, duration.count()};
+    }
+
+    // Метод для нахождения Евклидовой нормы (параллельная версия через std::thread)
+    std::pair<T, double> findEuclideanNormParallelThreads(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
+
+        T sum_of_squares = 0;
+        std::vector<std::thread> threads;
+        size_t chunk_size = n / num_threads;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Разделение на части и запуск потоков
+        for (size_t i = 0; i < num_threads; ++i) {
+            threads.push_back(std::thread([this, &sum_of_squares, i, chunk_size, num_threads]() {
+                T local_sum = 0;
+                size_t start_idx = i * chunk_size;
+                size_t end_idx = (i == num_threads - 1) ? n : start_idx + chunk_size;
+
+                for (size_t j = start_idx; j < end_idx; ++j) {
+                    local_sum += data[j] * data[j];
+                }
+
+                std::lock_guard<std::mutex> lock(mtx);
+                sum_of_squares += local_sum;  // Обновление общей суммы
+            }));
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        T norm = std::sqrt(sum_of_squares);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {norm, duration.count()};
+    }
+
+    // Метод для нахождения Евклидовой нормы (параллельная версия через OpenMP)
+    std::pair<T, double> findEuclideanNormParallelOpenMP(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Вектор не инициализирован!");
+        }
+
+        T sum_of_squares = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений с использованием OpenMP
+        #pragma omp parallel for num_threads(num_threads) reduction(+:sum_of_squares)
+        for (size_t i = 0; i < n; ++i) {
+            sum_of_squares += data[i] * data[i];
+        }
+
+        T norm = std::sqrt(sum_of_squares);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {norm, duration.count()};
+    }
+
 
 
 };

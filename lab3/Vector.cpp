@@ -406,5 +406,84 @@ public:
         return {average, duration.count()};
     }
 
+
+// Метод для нахождения суммы элементов (последовательная версия)
+    std::pair<T, double> findSumSequential() {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (size_t i = 0; i < n; ++i) {
+            sum += data[i];
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum, duration.count()};
+    }
+
+    // Метод для нахождения суммы элементов (параллельная версия через std::thread)
+    std::pair<T, double> findSumParallelThreads(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum = 0;
+        std::vector<std::thread> threads;
+        size_t chunk_size = n / num_threads;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Разделение на части и запуск потоков
+        for (size_t i = 0; i < num_threads; ++i) {
+            threads.push_back(std::thread([this, &sum, i, chunk_size, num_threads]() {
+                T local_sum = 0;
+                size_t start_idx = i * chunk_size;
+                size_t end_idx = (i == num_threads - 1) ? n : start_idx + chunk_size;
+
+                for (size_t j = start_idx; j < end_idx; ++j) {
+                    local_sum += data[j];
+                }
+
+                std::lock_guard<std::mutex> lock(mtx);
+                sum += local_sum;  // Обновление общей суммы
+            }));
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum, duration.count()};
+    }
+
+    // Метод для нахождения суммы элементов (параллельная версия через OpenMP)
+    std::pair<T, double> findSumParallelOpenMP(size_t num_threads) {
+        if (!is_initialized) {
+            throw std::logic_error("Vector is not initialized!");
+        }
+
+        T sum = 0;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // Открытие области параллельных вычислений с использованием OpenMP
+        #pragma omp parallel for num_threads(num_threads) reduction(+:sum)
+        for (size_t i = 0; i < n; ++i) {
+            sum += data[i];
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> duration = end - start;
+
+        return {sum, duration.count()};
+    }
+
+
 };
 

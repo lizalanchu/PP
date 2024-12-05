@@ -155,7 +155,7 @@ Matrix* MatrixBlock::transpose() const {
 
 void MatrixBlock::set(int blockRow, int blockCol, int subRow, int subCol, double value) {
     if (blockRow >= blockRows || blockCol >= blockCols || subRow >= subRows || subCol >= subCols || blockRow < 0 || blockCol < 0 || subRow < 0 || subCol < 0) {
-        throw std::out_of_range("Matrix block index out of range");
+        throw std::out_of_range("Индекс блока матрицы находится вне диапазона");
     }
     blocks[blockRow * blockRows + blockCol][subRow][subCol] = value;
 }
@@ -166,13 +166,13 @@ void MatrixBlock::set(int blockRow, int blockCol, int subRow, int subCol, double
 void MatrixBlock::importFromFile(const std::string& filename) {
     std::ifstream file(filename); // Открываем файл
     if (!file.is_open()) { // Проверка, открытие файла прошло успешно
-        throw std::runtime_error("Unable to open file.");
+        throw std::runtime_error("Не удается открыть файл.");
     }
 
     std::string className;
     file >> className; // Читаем имя класса
     if (className != "MatrixBlock") { // Проверяем, совпадает ли имя класса с ожидаемым
-        throw std::runtime_error("Invalid matrix type.");
+        throw std::runtime_error("Недопустимый тип матрицы.");
     }
 
     file >> blockRows >> blockCols >> subRows >> subCols; // Читаем размеры блоков и матрицы
@@ -183,7 +183,7 @@ void MatrixBlock::importFromFile(const std::string& filename) {
         for (int i = 0; i < blockRows; ++i) {
             for (int j = 0; j < blockCols; ++j) {
                 if (!(file >> blocks[b][i][j])) { // Если возникла ошибка при чтении
-                    throw std::runtime_error("Error reading block data.");
+                    throw std::runtime_error("Ошибка считывания данных блока.");
                 }
             }
         }
